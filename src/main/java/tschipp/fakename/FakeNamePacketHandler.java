@@ -21,22 +21,30 @@ public class FakeNamePacketHandler implements IMessageHandler<FakeNamePacket, IM
 
 	@Override
 	public IMessage onMessage(final FakeNamePacket message, final MessageContext ctx) {
+		IThreadListener mainThread = Minecraft.getMinecraft();
 
 
+		mainThread.addScheduledTask(new Runnable() {
 
-		EntityPlayer toSync = (EntityPlayer)FakeName.clientProxy.getClientWorld().getEntityByID(message.entityId);
-		if(toSync != null)
-		{
-			NBTTagCompound tag = toSync.getEntityData();
-			tag.setString("fakename", message.fakename);
-			toSync.refreshDisplayName();
+			@Override
+			public void run() {
 
-		}
+				EntityPlayer toSync = (EntityPlayer)FakeName.clientProxy.getClientWorld().getEntityByID(message.entityId);
+				if(toSync != null)
+				{
+					NBTTagCompound tag = toSync.getEntityData();
+					tag.setString("fakename", message.fakename);
+					toSync.refreshDisplayName();
+
+				}
+
+			}});
+
 		return null;
+		}
+
+
+
 	}
-
-
-
-}
 
 
