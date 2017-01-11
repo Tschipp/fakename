@@ -9,6 +9,7 @@ import net.minecraft.command.CommandException;
 import net.minecraft.command.ICommand;
 import net.minecraft.command.ICommandSender;
 import net.minecraft.command.WrongUsageException;
+import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.nbt.NBTTagCompound;
@@ -28,12 +29,13 @@ public class CommandFakeName extends CommandBase implements ICommand {
 		names = new ArrayList();
 		names.add("fakename");
 		names.add("fn");
+		names.add("fname");
 	}
 
 	@Override
 	public int compareTo(ICommand o)
 	{
-        return this.getCommandName().compareTo(o.getCommandName());
+		return this.getCommandName().compareTo(o.getCommandName());
 	}
 
 	@Override
@@ -56,12 +58,12 @@ public class CommandFakeName extends CommandBase implements ICommand {
 
 	public String getCommandUsageClear()
 	{
-		return "/fakename clear <player>";
+		return "/fakename clear [player]";
 	}
 
 	public String getCommandUsageSet()
 	{
-		return "/fakename set <player> <fakename> OR /fakename set <fakename>";
+		return "/fakename set [player] <fakename>";
 	}
 
 	@Override
@@ -75,104 +77,118 @@ public class CommandFakeName extends CommandBase implements ICommand {
 	{
 		if(args.length > 0)
 		{
-		if (args[0].toLowerCase().equals("set"))
-		{
-			// Handling set <Playername> <Fakename>
-			if (args.length == 3)
+			if (args[0].toLowerCase().equals("set"))
 			{
-				String playername = args[1];
-				String fakename = args[2];
-				EntityPlayerMP player = CommandBase.getPlayer(server, sender, playername);
-				NBTTagCompound tag = player.getEntityData();
-				fakename = fakename.replace("&", "§");
-				tag.setString("fakename", fakename);
-				if (sender.getCommandSenderEntity() != null && sender.getCommandSenderEntity() instanceof EntityPlayerMP && !playername.equals(((EntityPlayer) sender).getGameProfile().getName()))
+				// Handling set <Playername> <Fakename>
+				if (args.length == 3)
 				{
-					sender.addChatMessage(new TextComponentString(playername + "'s name is now " + fakename));
-				}
-				player.addChatMessage(new TextComponentString("Your name is now " + fakename));
-				FakeName.network.sendToAll(new FakeNamePacket(fakename , player.getEntityId()));
-				player.refreshDisplayName();
-			}
-			// Handling set <Fakename>
-			else if (args.length == 2)
-			{
-				String fakename = args[1];
-				EntityPlayerMP player = CommandBase.getPlayer(server, sender, sender.getName());
-				NBTTagCompound tag = player.getEntityData();
-				fakename = fakename.replace("&", "§");
-				tag.setString("fakename", fakename);
-				player.addChatMessage(new TextComponentString("Your name is now " + fakename));
-				FakeName.network.sendToAll(new FakeNamePacket(fakename , player.getEntityId()));
-				player.refreshDisplayName();
-			}
-
-			else
-			{
-				throw new WrongUsageException(this.getCommandUsageSet());
-			}
-			
-			// Handling real <Fakename>
-		} else if (args[0].toLowerCase().equals("real"))
-		{
-			if (args.length == 2)
-			{
-				String fakename = args[1];
-				List<EntityPlayerMP> players = server.getPlayerList().getPlayerList();
-				for (int i = 0; i < players.size(); i++)
-				{
-					if (players.get(i).getEntityData() != null && players.get(i).getEntityData().hasKey("fakename"))
+					String playername = args[1];
+					String fakename = args[2];
+					List<Entity> player = CommandBase.getEntityList(server, sender, playername);
+					for(int i = 0; i < player.size(); i++)
 					{
-						String fakeNamePlayer = players.get(i).getEntityData().getString("fakename");
-						String toRemove;
-						while (fakeNamePlayer.contains("§"))
+						if(player.get(i) instanceof EntityPlayerMP)
 						{
-							toRemove = fakeNamePlayer.substring((fakeNamePlayer.indexOf("§")), fakeNamePlayer.indexOf("§") + 2);
-							fakeNamePlayer = fakeNamePlayer.replace(toRemove, "");
+							NBTTagCompound tag = player.get(i).getEntityData();
+							fakename = fakename.replace("&", "§");
+							fakename = fakename.replace("/-", " ");
+							tag.setString("fakename", fakename);
+							if (sender.getCommandSenderEntity() != null && sender.getCommandSenderEntity() instanceof EntityPlayerMP && !playername.equals(((EntityPlayer) sender).getGameProfile().getName()))
+							{
+								sender.addChatMessage(new TextComponentString(playername + "'s name is now " + fakename));
+							}
+							player.get(i).addChatMessage(new TextComponentString("Your name is now " + fakename));
+							FakeName.network.sendToAll(new FakeNamePacket(fakename , player.get(i).getEntityId(), 0));
+							((EntityPlayer) player.get(i)).refreshDisplayName();
 						}
-						if(fakeNamePlayer.toLowerCase().equals(fakename.toLowerCase()))
+						else
 						{
-							sender.addChatMessage(new TextComponentString(fakeNamePlayer + "'s real name is " + players.get(i).getGameProfile().getName()));
-							return;
+							sender.addChatMessage(new TextComponentString(TextFormatting.RED + "You can not select non-player entities"));
 						}
 					}
-
-					if (i == players.size() - 1)
-					{
-						sender.addChatMessage(new TextComponentString(TextFormatting.RED + "There is no Player with the Fake Name '" + fakename + "'"));
-					}
 				}
-
-			} else
-			{
-				throw new WrongUsageException(this.getCommandUsageReal());
-			}
-
-		}
-		//Handling clear <playername>
-		else if (args[0].toLowerCase().equals("clear"))
-		{
-			if (args.length == 2)
-			{
-				String playername = args[1];
-				EntityPlayerMP player = CommandBase.getPlayer(server, sender, playername);
-				if(player.getEntityData() != null && player.getEntityData().hasKey("fakename"))
+				// Handling set <Fakename>
+				else if (args.length == 2)
 				{
-					player.getEntityData().removeTag("fakename");
-					sender.addChatMessage(new TextComponentString(playername+"'s Fake Name was removed"));
+					String fakename = args[1];
+					EntityPlayerMP player = CommandBase.getPlayer(server, sender, sender.getName());
+					NBTTagCompound tag = player.getEntityData();
+					fakename = fakename.replace("&", "§");
+					fakename = fakename.replace("/-", " ");
+					tag.setString("fakename", fakename);
+					player.addChatMessage(new TextComponentString("Your name is now " + fakename));
+					FakeName.network.sendToAll(new FakeNamePacket(fakename , player.getEntityId(), 0));
 					player.refreshDisplayName();
+				}
+
+				else
+				{
+					throw new WrongUsageException(this.getCommandUsageSet());
+				}
+
+				// Handling real <Fakename>
+			} 
+			//Handling clear <playername>
+			else if (args[0].toLowerCase().equals("clear"))
+			{
+				if (args.length == 2)
+				{
+					String playername = args[1];
+					List<Entity> player = CommandBase.getEntityList(server, sender, playername);
+					for(int i = 0; i < player.size(); i++)
+					{
+						if(player.get(i) instanceof EntityPlayerMP)
+						{
+							if(player.get(i).getEntityData() != null && player.get(i).getEntityData().hasKey("fakename"))
+							{
+								player.get(i).getEntityData().removeTag("fakename");
+								if (sender.getCommandSenderEntity() != null && sender.getCommandSenderEntity() instanceof EntityPlayerMP && !playername.equals(((EntityPlayer) sender).getGameProfile().getName()))
+								{
+									sender.addChatMessage(new TextComponentString(playername+"'s Fake Name was removed"));
+								}
+								player.get(i).addChatMessage(new TextComponentString("Your Fake Name was removed"));
+								FakeName.network.sendToAll(new FakeNamePacket("something" , player.get(i).getEntityId(), 1));
+								((EntityPlayer) player.get(i)).refreshDisplayName();
+							}
+							else
+							{
+								sender.addChatMessage(new TextComponentString(TextFormatting.RED + "The provided Player does not have a Fake Name"));
+							}
+						}
+						else
+						{
+							sender.addChatMessage(new TextComponentString(TextFormatting.RED + "You can not select Entities"));
+						}
+					}
+				}
+				else if (args.length == 1)
+				{
+					EntityPlayerMP player = (EntityPlayerMP)sender;
+					if(player.getEntityData() != null && player.getEntityData().hasKey("fakename"))
+					{
+						player.getEntityData().removeTag("fakename");
+						sender.addChatMessage(new TextComponentString("Your Fake Name was removed"));
+						FakeName.network.sendToAll(new FakeNamePacket("something" , player.getEntityId(), 1));
+						player.refreshDisplayName();
+					}
+					else
+					{
+						sender.addChatMessage(new TextComponentString(TextFormatting.RED + "You do not have a Fake Name"));
+					}
+
 				}
 				else
 				{
-					sender.addChatMessage(new TextComponentString(TextFormatting.RED + "The provided Player does not have a Fake Name"));
+					throw new WrongUsageException(this.getCommandUsageClear());
 				}
+
 			}
 			else
 			{
-				throw new WrongUsageException(this.getCommandUsageClear());
+				throw new WrongUsageException(this.getCommandUsage(sender));
+
 			}
-			
-		}
+
 
 		}
 		else
@@ -185,8 +201,7 @@ public class CommandFakeName extends CommandBase implements ICommand {
 	@Override
 	public boolean checkPermission(MinecraftServer server, ICommandSender sender)
 	{
-
-		return true;
+		return sender.canCommandSenderUseCommand(this.getRequiredPermissionLevel(), this.getCommandName());
 	}
 
 	@Override
@@ -197,7 +212,7 @@ public class CommandFakeName extends CommandBase implements ICommand {
 		{
 			if (args.length == 1)
 			{
-				return CommandBase.getListOfStringsMatchingLastWord(args, "set", "real", "clear");
+				return CommandBase.getListOfStringsMatchingLastWord(args, "set", "clear");
 			}
 
 			if (args.length == 2 && (args[0].equals("set") || args[0].equals("clear")))
@@ -226,7 +241,7 @@ public class CommandFakeName extends CommandBase implements ICommand {
 	@Override
 	public int getRequiredPermissionLevel()
 	{
-		return 4;
+		return 2;
 	}
 
 }

@@ -14,8 +14,6 @@ import net.minecraft.world.WorldServer;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessageHandler;
 import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
-import tschipp.creativePlus.items.CustomItems;
-import tschipp.creativePlus.network.NoisePacket;
 
 public class FakeNamePacketHandler implements IMessageHandler<FakeNamePacket, IMessage>{
 
@@ -29,22 +27,33 @@ public class FakeNamePacketHandler implements IMessageHandler<FakeNamePacket, IM
 			@Override
 			public void run() {
 
-				EntityPlayer toSync = (EntityPlayer)FakeName.clientProxy.getClientWorld().getEntityByID(message.entityId);
+				EntityPlayer toSync = (EntityPlayer)FakeName.proxy.getClientWorld().getEntityByID(message.entityId);
+
 				if(toSync != null)
 				{
-					NBTTagCompound tag = toSync.getEntityData();
-					tag.setString("fakename", message.fakename);
-					toSync.refreshDisplayName();
+					if(message.deleteFakename == 0)
+					{
+						NBTTagCompound tag = toSync.getEntityData();
+						tag.setString("fakename", message.fakename);
+						toSync.refreshDisplayName();
+					}
+					else
+					{
+						NBTTagCompound tag = toSync.getEntityData();
+						tag.removeTag("fakename");
+						toSync.refreshDisplayName();
+
+					}
 
 				}
 
 			}});
 
 		return null;
-		}
-
-
-
 	}
+
+
+
+}
 
 

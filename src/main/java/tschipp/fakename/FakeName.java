@@ -26,7 +26,7 @@ import net.minecraftforge.fml.common.network.simpleimpl.SimpleNetworkWrapper;
 import net.minecraftforge.fml.relauncher.Side;
 
 
-@Mod(modid = "fakename", name = "Fake Name", version = "1.0")
+@Mod(modid = "fakename", name = "Fake Name", version = "1.1")
 
 public class FakeName {
 
@@ -41,11 +41,6 @@ public class FakeName {
 	
 	@SidedProxy(clientSide = CLIENT_PROXY, serverSide = COMMON_PROXY)
 	public static CommonProxy proxy;
-	
-	@SidedProxy(clientSide = CLIENT_PROXY, serverSide = COMMON_PROXY)
-	public static ClientProxy clientProxy;
-	
-
 
 	@EventHandler
 	public void preInit(FMLPreInitializationEvent event) {
@@ -80,6 +75,7 @@ public class FakeName {
 	public void serverLoad(FMLServerStartingEvent event)
 	{
 		event.registerServerCommand(new CommandFakeName());
+		event.registerServerCommand(new CommandRealName());
 
 	}
 
@@ -129,7 +125,7 @@ public class FakeName {
 			{
 				while(playersTracking.hasNext())
 				{
-					FakeName.network.sendTo(new FakeNamePacket(player.getEntityData().getString("fakename") , player.getEntityId()), (EntityPlayerMP) playersTracking.next());
+					FakeName.network.sendTo(new FakeNamePacket(player.getEntityData().getString("fakename") , player.getEntityId(), 0), (EntityPlayerMP) playersTracking.next());
 				}
 			}
 		}
@@ -147,7 +143,7 @@ public class FakeName {
 				EntityPlayerMP toRecieve = (EntityPlayerMP) event.getEntityPlayer();
 				System.out.println("The Recieving Player is " + toRecieve);
 
-				FakeName.network.sendTo(new FakeNamePacket(targetPlayer.getEntityData().getString("fakename") , targetPlayer.getEntityId()), toRecieve);
+				FakeName.network.sendTo(new FakeNamePacket(targetPlayer.getEntityData().getString("fakename") , targetPlayer.getEntityId(), 0), toRecieve);
 			}
 		}
 	} 
