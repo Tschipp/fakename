@@ -72,9 +72,9 @@ public class CommandRealName extends CommandBase implements ICommand {
 						String fakeNamePlayer = players.get(i).getEntityData().getString("fakename");
 						String toRemove;
 						//Removes any Formatting Codes
-						while (fakeNamePlayer.contains("§"))
+						while (fakeNamePlayer.contains("\u00a7"))
 						{
-							toRemove = fakeNamePlayer.substring((fakeNamePlayer.indexOf("§")), fakeNamePlayer.indexOf("§") + 2);
+							toRemove = fakeNamePlayer.substring((fakeNamePlayer.indexOf("\u00a7")), fakeNamePlayer.indexOf("\u00a7") + 2);
 							fakeNamePlayer = fakeNamePlayer.replace(toRemove, "");
 						}
 						//Removes any whitespaces;

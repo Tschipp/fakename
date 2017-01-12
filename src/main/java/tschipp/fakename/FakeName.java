@@ -26,7 +26,7 @@ import net.minecraftforge.fml.common.network.simpleimpl.SimpleNetworkWrapper;
 import net.minecraftforge.fml.relauncher.Side;
 
 
-@Mod(modid = "fakename", name = "Fake Name", version = "1.1")
+@Mod(modid = "fakename", name = "Fake Name", version = "1.2")
 
 public class FakeName {
 

@@ -90,7 +90,7 @@ public class CommandFakeName extends CommandBase implements ICommand {
 						if(player.get(i) instanceof EntityPlayerMP)
 						{
 							NBTTagCompound tag = player.get(i).getEntityData();
-							fakename = fakename.replace("&", "§");
+							fakename = fakename.replace("&", "\u00a7");
 							fakename = fakename.replace("/-", " ");
 							tag.setString("fakename", fakename);
 							if (sender.getCommandSenderEntity() != null && sender.getCommandSenderEntity() instanceof EntityPlayerMP && !playername.equals(((EntityPlayer) sender).getGameProfile().getName()))
@@ -113,7 +113,7 @@ public class CommandFakeName extends CommandBase implements ICommand {
 					String fakename = args[1];
 					EntityPlayerMP player = CommandBase.getPlayer(server, sender, sender.getName());
 					NBTTagCompound tag = player.getEntityData();
-					fakename = fakename.replace("&", "§");
+					fakename = fakename.replace("&", "\u00a7");
 					fakename = fakename.replace("/-", " ");
 					tag.setString("fakename", fakename);
 					player.addChatMessage(new TextComponentString("Your name is now " + fakename));
