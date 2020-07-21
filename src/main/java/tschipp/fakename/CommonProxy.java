@@ -1,25 +1,18 @@
 package tschipp.fakename;
 
 import net.minecraft.world.World;
-import net.minecraftforge.fml.common.event.FMLInitializationEvent;
-import net.minecraftforge.fml.common.event.FMLPostInitializationEvent;
-import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
+import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
 
-public class CommonProxy {
-	
-	public void preInit(FMLPreInitializationEvent event) {
+public class CommonProxy implements IProxy {
 
-	}
-	
-	public void init(FMLInitializationEvent event) {
+	@Override
+	public void setup(FMLCommonSetupEvent event)
+	{		
 		
 	}
 
-	public void postInit(FMLPostInitializationEvent event) {
-	
-	}
-	
-	public World getClientWorld()
+	@Override
+	public World getWorld()
 	{
 		return null;
 	}
