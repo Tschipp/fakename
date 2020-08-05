@@ -8,9 +8,7 @@ loaderVersion="[31,)" #mandatory This is typically bumped every Minecraft versio
 	logoFile="logo.png" #optional
 	authors="Tschipp" #optional
 	# The description text for the mod (multi line!) (#mandatory)
-	description='''
-	Fakename adds a way to change the name of players.
-	'''
+	description="Fakename adds a way to change the name of players."
 # A dependency - use the . to indicate dependency for a specific modid. Dependencies are optional.
 [[dependencies.fakename]] #optional
     # the modid of the dependency
