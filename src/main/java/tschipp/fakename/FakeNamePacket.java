@@ -4,14 +4,12 @@ import java.util.function.Supplier;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.network.PacketBuffer;
 import net.minecraft.util.text.StringTextComponent;
 import net.minecraftforge.fml.network.NetworkEvent;
 
 public class FakeNamePacket
-{
-
+{	
 	public String fakename;
 	public int entityId;
 	public int deleteFakename;
@@ -52,21 +50,12 @@ public class FakeNamePacket
 			{
 				ctx.get().setPacketHandled(true);
 				
-				CompoundNBT tag = toSync.getPersistentData();
-
-				if(deleteFakename == 0)
-				{
-					tag.putString("fakename", fakename);
-					Minecraft.getInstance().player.connection.getPlayerInfo(toSync.getGameProfile().getId()).setDisplayName(new StringTextComponent(fakename));
-//					toSync.refreshDisplayName();
-				}
-				else
-				{
-					tag.remove("fakename");
-					Minecraft.getInstance().player.connection.getPlayerInfo(toSync.getGameProfile().getId()).setDisplayName(new StringTextComponent(toSync.getGameProfile().getName()));
-//					toSync.refreshDisplayName();
-				}
+				FakeName.performFakenameOperation(toSync, fakename, deleteFakename);
 				
+				if(deleteFakename == 0)
+					Minecraft.getInstance().player.connection.getPlayerInfo(toSync.getGameProfile().getId()).setDisplayName(new StringTextComponent(fakename));
+				else
+					Minecraft.getInstance().player.connection.getPlayerInfo(toSync.getGameProfile().getId()).setDisplayName(new StringTextComponent(toSync.getGameProfile().getName()));
 			}
 
 		});

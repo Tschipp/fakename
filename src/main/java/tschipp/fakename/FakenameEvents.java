@@ -19,7 +19,7 @@ public class FakenameEvents
 	{
 		CommandFakeName.register(event.getCommandDispatcher());
 	}
-	
+
 	@SubscribeEvent
 	public static void renderName(PlayerEvent.NameFormat event)
 	{
@@ -41,7 +41,14 @@ public class FakenameEvents
 		PlayerEntity player = event.getPlayer();
 		if (!player.world.isRemote)
 		{
-			FakeName.network.send(PacketDistributor.ALL.noArg(), new FakeNamePacket(player.getPersistentData().getString("fakename"), player.getEntityId(), 0));
+			if (player.getPersistentData().contains("fakename"))
+				FakeName.sendPacket(player, player.getPersistentData().getString("fakename"), 0);
+			
+			for(PlayerEntity other : player.getServer().getPlayerList().getPlayers())
+			{
+				if (other.getPersistentData().contains("fakename"))
+					FakeName.network.send(PacketDistributor.PLAYER.with(() -> (ServerPlayerEntity)player), new FakeNamePacket(other.getPersistentData().getString("fakename"), other.getEntityId(), 0));
+			}
 		}
 	}
 
@@ -51,12 +58,9 @@ public class FakenameEvents
 		if (event.getTarget() instanceof PlayerEntity)
 		{
 			PlayerEntity targetPlayer = (PlayerEntity) event.getTarget();
-			// System.out.println("The Targeted Player is " + targetPlayer);
 			if (targetPlayer.getPersistentData() != null && targetPlayer.getPersistentData().contains("fakename"))
 			{
 				ServerPlayerEntity toRecieve = (ServerPlayerEntity) event.getPlayer();
-				// System.out.println("The Recieving Player is " + toRecieve);
-
 				FakeName.network.send(PacketDistributor.PLAYER.with(() -> toRecieve), new FakeNamePacket(targetPlayer.getPersistentData().getString("fakename"), targetPlayer.getEntityId(), 0));
 			}
 		}
@@ -76,5 +80,5 @@ public class FakenameEvents
 		}
 
 	}
-	
+
 }
