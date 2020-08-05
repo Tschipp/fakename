@@ -89,7 +89,7 @@ public class CommandFakeName
 
 	private static int handleSetname(CommandSource source, Collection<ServerPlayerEntity> players, String string)
 	{
-		string = string.replace("&", "\u00a7") + "§r";
+		string = string.replace("&", "\u00a7") + "\u00a7r";
 
 		for (ServerPlayerEntity player : players)
 		{
