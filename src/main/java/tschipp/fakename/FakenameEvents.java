@@ -3,11 +3,12 @@ package tschipp.fakename;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.nbt.CompoundNBT;
+import net.minecraft.util.text.StringTextComponent;
+import net.minecraftforge.event.RegisterCommandsEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
-import net.minecraftforge.fml.event.server.FMLServerStartingEvent;
 import net.minecraftforge.fml.network.PacketDistributor;
 
 @EventBusSubscriber(bus = Mod.EventBusSubscriber.Bus.FORGE)
@@ -15,9 +16,9 @@ public class FakenameEvents
 {
 
 	@SubscribeEvent
-	public static void serverLoad(FMLServerStartingEvent event)
+	public static void onCommandsRegister(RegisterCommandsEvent event)
 	{
-		CommandFakeName.register(event.getCommandDispatcher());
+		CommandFakeName.register(event.getDispatcher());
 	}
 
 	@SubscribeEvent
@@ -26,7 +27,7 @@ public class FakenameEvents
 		CompoundNBT tag = event.getPlayer().getPersistentData();
 		if (tag.contains("fakename"))
 		{
-			event.setDisplayname(tag.getString("fakename"));
+			event.setDisplayname(new StringTextComponent(tag.getString("fakename")));
 		}
 		else
 		{
