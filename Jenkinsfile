@@ -16,8 +16,7 @@ pipeline {
             steps {
 				withCredentials([file(credentialsId: 'mod_build_secrets', variable: 'ORG_GRADLE_PROJECT_secretFile')]) {
 					echo 'Building and Deploying to Maven'
-						sh './gradlew build publish --no-daemon
-'
+						sh './gradlew build publish --no-daemon'
 					}
 				}
             }
