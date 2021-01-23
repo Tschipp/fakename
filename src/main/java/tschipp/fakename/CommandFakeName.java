@@ -39,6 +39,7 @@ public class CommandFakeName
 				
 		LiteralArgumentBuilder<CommandSource> builder = literal("fakename")
 
+				.requires(src -> {boolean b = src.hasPermissionLevel(Config.SERVER.commandPermissionLevelSelf.get()); System.out.println(b); System.out.println(Config.SERVER.commandPermissionLevelSelf.get()); return b;})
 				.then(
 						literal("real")
 						.then(
@@ -77,6 +78,7 @@ public class CommandFakeName
 						)
 						.then(
 								Commands.argument("fakename", StringArgumentType.string())
+								.requires(src -> {boolean b = src.hasPermissionLevel(Config.SERVER.commandPermissionLevelSelf.get()); System.out.println(b); System.out.println(Config.SERVER.commandPermissionLevelSelf.get()); return b;})
 								.executes((cmd) -> {
 									return handleSetname(cmd.getSource(), Collections.singleton(cmd.getSource().asPlayer()), StringArgumentType.getString(cmd, "fakename"));
 								})
