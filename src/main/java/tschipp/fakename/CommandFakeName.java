@@ -39,7 +39,7 @@ public class CommandFakeName
 				
 		LiteralArgumentBuilder<CommandSource> builder = literal("fakename")
 
-				.requires(src -> {boolean b = src.hasPermissionLevel(Config.SERVER.commandPermissionLevelSelf.get()); System.out.println(b); System.out.println(Config.SERVER.commandPermissionLevelSelf.get()); return b;})
+				.requires(src -> src.hasPermissionLevel(Config.SERVER.commandPermissionLevelSelf.get()))
 				.then(
 						literal("real")
 						.then(
@@ -54,7 +54,7 @@ public class CommandFakeName
 						literal("clear")
 						.then(
 								Commands.argument("target", EntityArgument.players())
-								.requires(src -> {boolean b = src.hasPermissionLevel(Config.SERVER.commandPermissionLevelAll.get()); System.out.println(b); System.out.println(Config.SERVER.commandPermissionLevelAll.get()); return b;})
+								.requires(src -> src.hasPermissionLevel(Config.SERVER.commandPermissionLevelAll.get()))
 								.executes((cmd) -> {
 									return handleClear(cmd.getSource(), EntityArgument.getPlayers(cmd, "target"));
 								})
@@ -78,7 +78,7 @@ public class CommandFakeName
 						)
 						.then(
 								Commands.argument("fakename", StringArgumentType.string())
-								.requires(src -> {boolean b = src.hasPermissionLevel(Config.SERVER.commandPermissionLevelSelf.get()); System.out.println(b); System.out.println(Config.SERVER.commandPermissionLevelSelf.get()); return b;})
+								.requires(src -> src.hasPermissionLevel(Config.SERVER.commandPermissionLevelSelf.get()))
 								.executes((cmd) -> {
 									return handleSetname(cmd.getSource(), Collections.singleton(cmd.getSource().asPlayer()), StringArgumentType.getString(cmd, "fakename"));
 								})
