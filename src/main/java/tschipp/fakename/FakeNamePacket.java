@@ -3,62 +3,62 @@ package tschipp.fakename;
 import java.util.function.Supplier;
 
 import net.minecraft.client.Minecraft;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.network.PacketBuffer;
-import net.minecraft.util.text.StringTextComponent;
-import net.minecraftforge.fml.network.NetworkEvent;
+import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.network.chat.TextComponent;
+import net.minecraft.world.entity.player.Player;
+import net.minecraftforge.network.NetworkEvent.Context;
 
 public class FakeNamePacket
-{	
-	public String fakename;
-	public int entityId;
-	public int deleteFakename;
+{
+    public String fakename;
+    public int entityId;
+    public int deleteFakename;
 
-	public FakeNamePacket(PacketBuffer buf)
-	{
-		this.fakename = buf.readString();
-		this.entityId = buf.readInt();
-		this.deleteFakename = buf.readInt();
-	}
+    public FakeNamePacket(FriendlyByteBuf buf)
+    {
+        this.fakename = buf.readUtf();
+        this.entityId = buf.readInt();
+        this.deleteFakename = buf.readInt();
+    }
 
-	public FakeNamePacket()
-	{
+    public FakeNamePacket()
+    {
 
-	}
+    }
 
-	public FakeNamePacket(String fakename, int entityID, int delete)
-	{
-		this.fakename = fakename;
-		this.entityId = entityID;
-		this.deleteFakename = delete;
-	}
+    public FakeNamePacket(String fakename, int entityID, int delete)
+    {
+        this.fakename = fakename;
+        this.entityId = entityID;
+        this.deleteFakename = delete;
+    }
 
-	public void toBytes(PacketBuffer buf)
-	{
-		buf.writeString(fakename);
-		buf.writeInt(entityId);
-		buf.writeInt(deleteFakename);
-	}
+    public void toBytes(FriendlyByteBuf buf)
+    {
+        buf.writeUtf(fakename);
+        buf.writeInt(entityId);
+        buf.writeInt(deleteFakename);
+    }
 
-	public void handle(Supplier<NetworkEvent.Context> ctx)
-	{
-		ctx.get().enqueueWork(() -> {
+    public void handle(Supplier<Context> ctx)
+    {
+        ctx.get().enqueueWork(() -> {
 
-			PlayerEntity toSync = (PlayerEntity) FakeName.proxy.getWorld().getEntityByID(entityId);
+            Player toSync = (Player) FakeName.proxy.getWorld().getEntity(entityId);
 
-			if (toSync != null)
-			{
-				ctx.get().setPacketHandled(true);
-				
-				FakeName.performFakenameOperation(toSync, fakename, deleteFakename);
-				
-				if(deleteFakename == 0)
-					Minecraft.getInstance().player.connection.getPlayerInfo(toSync.getGameProfile().getId()).setDisplayName(new StringTextComponent(fakename));
-				else
-					Minecraft.getInstance().player.connection.getPlayerInfo(toSync.getGameProfile().getId()).setDisplayName(new StringTextComponent(toSync.getGameProfile().getName()));
-			}
+            if (toSync != null)
+            {
+                ctx.get().setPacketHandled(true);
 
-		});
-	}
+                FakeName.performFakenameOperation(toSync, fakename, deleteFakename);
+
+                if(deleteFakename == 0)
+                    Minecraft.getInstance().player.connection.getPlayerInfo(toSync.getGameProfile().getId()).setTabListDisplayName(new TextComponent(fakename));
+                else
+                    Minecraft.getInstance().player.connection.getPlayerInfo(toSync.getGameProfile().getId()).setTabListDisplayName(new TextComponent(toSync.getGameProfile().getName()));
+            }
+
+        });
+    }
 
 }

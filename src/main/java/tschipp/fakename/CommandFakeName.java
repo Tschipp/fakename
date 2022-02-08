@@ -1,6 +1,9 @@
 package tschipp.fakename;
 
-import static net.minecraft.command.Commands.literal;
+import static net.minecraft.commands.Commands.literal;
+
+import net.minecraft.commands.Commands;
+import net.minecraft.commands.SharedSuggestionProvider;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -14,189 +17,184 @@ import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
+import com.mojang.brigadier.suggestion.SuggestionProvider;
 import com.mojang.brigadier.suggestion.Suggestions;
 import com.mojang.brigadier.suggestion.SuggestionsBuilder;
 
 import net.minecraft.client.multiplayer.ClientSuggestionProvider;
-import net.minecraft.command.CommandSource;
-import net.minecraft.command.Commands;
-import net.minecraft.command.ISuggestionProvider;
-import net.minecraft.command.arguments.EntityArgument;
-import net.minecraft.command.arguments.IArgumentSerializer;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.entity.player.ServerPlayerEntity;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.network.PacketBuffer;
-import net.minecraft.server.management.PlayerList;
-import net.minecraft.util.text.StringTextComponent;
-import net.minecraft.util.text.TextFormatting;
+import net.minecraft.commands.arguments.EntityArgument;
+import net.minecraft.commands.synchronization.ArgumentSerializer;
+import net.minecraft.commands.CommandSourceStack;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.network.chat.TextComponent;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.server.players.PlayerList;
+import net.minecraft.world.entity.player.Player;
 
-public class CommandFakeName
-{
+public class CommandFakeName {
 
-	public static void register(CommandDispatcher<CommandSource> dispatcher)
-	{		
-				
-		LiteralArgumentBuilder<CommandSource> builder = literal("fakename")
+    public static void register(CommandDispatcher<CommandSourceStack> dispatcher)
+    {
 
-				.then(
-						literal("real")
-						.then(
-								Commands.argument("fakename", FakenameArgumentType.fakename())
-								.executes((cmd) -> {
-									return handleRealname(cmd.getSource(), cmd.getArgument("fakename", String.class));
-								})
-						)
-				)
+        LiteralArgumentBuilder<CommandSourceStack> builder = literal("fakename")
 
-				.then(
-						literal("clear")
-						.then(
-								Commands.argument("target", EntityArgument.players())
-								.requires(src -> {boolean b = src.hasPermissionLevel(Config.SERVER.commandPermissionLevelAll.get()); System.out.println(b); System.out.println(Config.SERVER.commandPermissionLevelAll.get()); return b;})
-								.executes((cmd) -> {
-									return handleClear(cmd.getSource(), EntityArgument.getPlayers(cmd, "target"));
-								})
-						)
-						.executes((cmd) -> {
-							return handleClear(cmd.getSource(), Collections.singleton(cmd.getSource().asPlayer()));
-						})
-				)
+                .then(
+                        literal("real")
+                                .then(
+                                        Commands.argument("fakename", FakenameArgumentType.fakename())
+                                                .executes((cmd) -> {
+                                                    return handleRealname(cmd.getSource(), cmd.getArgument("fakename", String.class));
+                                                })
+                                )
+                        )
 
-				.then(
-						literal("set")
-						.then(
-								Commands.argument("target", EntityArgument.players())
-								.requires(src -> src.hasPermissionLevel(Config.SERVER.commandPermissionLevelAll.get()))
-								.then(
-										Commands.argument("fakename", StringArgumentType.string())
-										.executes((cmd) -> {
-											return handleSetname(cmd.getSource(), EntityArgument.getPlayers(cmd, "target"), StringArgumentType.getString(cmd, "fakename"));
-										})
-								)
-						)
-						.then(
-								Commands.argument("fakename", StringArgumentType.string())
-								.executes((cmd) -> {
-									return handleSetname(cmd.getSource(), Collections.singleton(cmd.getSource().asPlayer()), StringArgumentType.getString(cmd, "fakename"));
-								})
-						)
-				);
+                .then(
+                        literal("clear")
+                                .then(
+                                        Commands.argument("target", EntityArgument.players())
+                                                .requires(src -> { boolean b = src.hasPermission(Config.SERVER.commandPermissionLevelAll.get()); System.out.println(b); System.out.println(Config.SERVER.commandPermissionLevelAll.get()); return b;})
+                                                .executes((cmd) -> {
+                                                    return handleClear(cmd.getSource(), EntityArgument.getPlayers(cmd, "target"));
+                                                })
+                                )
+                                .executes((cmd) -> {
+                                    return handleClear(cmd.getSource(), Collections.singleton(cmd.getSource().getPlayerOrException()));
+                                })
+                )
 
-		dispatcher.register(builder);
+                .then(
+                        literal("set")
+                        .then(
+                                Commands.argument("target", EntityArgument.players())
+                                .requires(src -> src.hasPermission(Config.SERVER.commandPermissionLevelAll.get()))
+                                .then(
+                                        Commands.argument("fakename", StringArgumentType.string())
+                                        .executes((cmd) -> {
+                                            return handleSetname(cmd.getSource(),EntityArgument.getPlayers(cmd, "target"),StringArgumentType.getString(cmd,"fakename"));
+                                                })
+                                )
+                        )
+                        .then(
+                                Commands.argument("fakename", StringArgumentType.string())
+                                        .executes((cmd) -> {
+                                            return handleSetname(cmd.getSource(), Collections.singleton(cmd.getSource().getPlayerOrException()), StringArgumentType.getString(cmd, "fakename"));
+                                        })
+                        )
+                );
 
-	}
+        dispatcher.register(builder);
 
-	private static int handleSetname(CommandSource source, Collection<ServerPlayerEntity> players, String string)
-	{
-		string = string.replace("&", "\u00a7") + "\u00a7r";
+    }
 
-		for (ServerPlayerEntity player : players)
-		{
-			CompoundNBT tag = player.getPersistentData();
-			tag.putString("fakename", string);
-			source.sendFeedback(new StringTextComponent(player.getName().getUnformattedComponentText() + "'s name is now " + string), false);
-			FakeName.sendPacket(player, string, 0);
-		}
+    private static int handleSetname(CommandSourceStack source, Collection<ServerPlayer> players, String string) {
+        string = string.replace("&", "\u00a7") + "\u00a7r";
 
-		return 1;
-	}
+        for (ServerPlayer player : players)
+        {
+            CompoundTag tag = player.getPersistentData();
+            tag.putString("fakename", string);
+            source.sendSuccess(new TextComponent(player.getName() + "'s name is now " + string), false);
+            FakeName.sendPacket(player, string, 0);
+        }
 
-	private static int handleClear(CommandSource source, Collection<ServerPlayerEntity> players)
-	{
-		for (ServerPlayerEntity player : players)
-		{
-			CompoundNBT tag = player.getPersistentData();
-			tag.remove("fakename");
-			source.sendFeedback(new StringTextComponent(player.getName().getUnformattedComponentText() + "'s fake name was cleared!"), false);
-			FakeName.sendPacket(player, "", 1);
-		}
+        return 1;
+    }
 
-		return 1;
-	}
+    private static int handleClear(CommandSourceStack source, Collection<ServerPlayer> players)
+    {
+        for (ServerPlayer player : players)
+        {
+            CompoundTag tag = player.getPersistentData();
+            tag.remove("fakename");
+            source.sendSuccess(new TextComponent(player.getName() + "'s fake name was cleared!"), false);
+            FakeName.sendPacket(player, "", 1);
+        }
 
-	private static int handleRealname(CommandSource source, String string)
-	{
-		PlayerList players = source.getServer().getPlayerList();
-		for (PlayerEntity player : players.getPlayers())
-		{
-			if (player.getPersistentData() != null && player.getPersistentData().contains("fakename"))
-			{
-				if (TextFormatting.getTextWithoutFormattingCodes(player.getPersistentData().getString("fakename")).equalsIgnoreCase(string))
-				{
-					source.sendFeedback(new StringTextComponent(string + "'s real name is " + player.getGameProfile().getName()), false);
-					return 1;
-				}
-			}
-		}
+        return 1;
+    }
 
-		source.sendErrorMessage(new StringTextComponent("No player with that name was found!"));
-		return 0;
-	}
+    private static int handleRealname(CommandSourceStack source, String string)
+    {
+        PlayerList players = source.getServer().getPlayerList();
+        for (Player player : players.getPlayers())
+        {
+            if (player.getPersistentData() != null && player.getPersistentData().contains("fakename"))
+            {
+                if (player.getPersistentData().getString("fakename").equalsIgnoreCase(string))
+                {
+                    source.sendSuccess(new TextComponent(string + "'s real name is " + player.getGameProfile().getName()), false);
+                    return 1;
+                }
+            }
+        }
 
-	public static class FakenameArgumentType implements ArgumentType<String>
-	{
+        source.sendFailure(new TextComponent("No player with that name was found!"));
+        return 0;
+    }
 
-		public static FakenameArgumentType fakename()
-		{
-			return new FakenameArgumentType();
-		}
+    public static class FakenameArgumentType implements ArgumentType<String>
+    {
 
-		@SuppressWarnings("unchecked")
-		@Override
-		public <S> CompletableFuture<Suggestions> listSuggestions(CommandContext<S> context, SuggestionsBuilder builder)
-		{
-			if (!(context.getSource() instanceof ISuggestionProvider))
-			{
-				return Suggestions.empty();
-			}
-			else if (context.getSource() instanceof ClientSuggestionProvider)
-			{
-				return ((ClientSuggestionProvider) context.getSource()).getSuggestionsFromServer((CommandContext<ISuggestionProvider>) context, builder);
-			}
-			else
-			{
-				PlayerList players = ((CommandSource) context.getSource()).getServer().getPlayerList();
-				for (PlayerEntity player : players.getPlayers())
-				{
-					if (player.getPersistentData() != null && player.getPersistentData().contains("fakename"))
-					{
-						builder.suggest(TextFormatting.getTextWithoutFormattingCodes(player.getPersistentData().getString("fakename")));
-					}
-				}
+        public static FakenameArgumentType fakename()
+        {
+            return new FakenameArgumentType();
+        }
 
-				return builder.buildFuture();
-			}
-		}
+        @SuppressWarnings("unchecked")
+        @Override
+        public <S> CompletableFuture<Suggestions> listSuggestions(CommandContext<S> context, SuggestionsBuilder builder)
+        {
+            if (!(context.getSource() instanceof SuggestionProvider))
+            {
+                return Suggestions.empty();
+            } else if (context.getSource() instanceof SharedSuggestionProvider)
+            {
+                return ((SharedSuggestionProvider) context.getSource()).customSuggestion((CommandContext<SharedSuggestionProvider>) context, builder);
+            }
+            else
+            {
+                PlayerList players = ((CommandSourceStack) context.getSource()).getServer().getPlayerList();
+                for (Player player : players.getPlayers())
+                {
+                    if (player.getPersistentData() != null && player.getPersistentData().contains("fakename"))
+                    {
+                        builder.suggest(player.getPersistentData().getString("fakename"));
+                    }
+                }
 
-		@Override
-		public String parse(StringReader reader) throws CommandSyntaxException
-		{
-			String rest = reader.getRemaining();
+                return builder.buildFuture();
+            }
+        }
+
+        @Override
+        public String parse(StringReader reader) throws CommandSyntaxException
+        {
+            String rest = reader.getRemaining();
             reader.setCursor(reader.getTotalLength());
-			return rest;
-		}
+            return rest;
+        }
 
-		public static class Serializer implements IArgumentSerializer<FakenameArgumentType>
-		{
+        public static class Serializer implements ArgumentSerializer<FakenameArgumentType>
+        {
 
-			@Override
-			public void write(FakenameArgumentType argument, PacketBuffer buffer)
-			{
-			}
+            @Override
+            public void serializeToNetwork(FakenameArgumentType p_121579_, FriendlyByteBuf p_121580_)
+            {
+            }
 
-			@Override
-			public FakenameArgumentType read(PacketBuffer buffer)
-			{
-				return fakename();
-			}
+            @Override
+            public FakenameArgumentType deserializeFromNetwork(FriendlyByteBuf p_121581_)
+            {
+                return fakename();
+            }
 
-			@Override
-			public void write(FakenameArgumentType p_212244_1_, JsonObject p_212244_2_)
-			{
-			}
+            @Override
+            public void serializeToJson(FakenameArgumentType p_121577_, JsonObject p_121578_)
+            {
+            }
 
-		}
+        }
 
-	}
+    }
 }
