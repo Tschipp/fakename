@@ -20,6 +20,10 @@ version = "${version}"
 group = "tschipp.fakename"
 archivesBaseName = "fakename-${minecraft_version}"
 
+if (System.getenv('BUILD_NUMBER') != null) {
+    version += "." + System.getenv('BUILD_NUMBER')
+}
+
 mixin {
     add sourceSets.main, "fakename.refmap.json"
     config "fakename.mixins.json"
