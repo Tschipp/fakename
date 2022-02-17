@@ -21,6 +21,7 @@ import com.mojang.brigadier.suggestion.SuggestionProvider;
 import com.mojang.brigadier.suggestion.Suggestions;
 import com.mojang.brigadier.suggestion.SuggestionsBuilder;
 
+import net.minecraft.ChatFormatting;
 import net.minecraft.client.multiplayer.ClientSuggestionProvider;
 import net.minecraft.commands.arguments.EntityArgument;
 import net.minecraft.commands.synchronization.ArgumentSerializer;
@@ -53,7 +54,7 @@ public class CommandFakeName {
                         literal("clear")
                                 .then(
                                         Commands.argument("target", EntityArgument.players())
-                                                .requires(src -> { boolean b = src.hasPermission(Config.SERVER.commandPermissionLevelAll.get()); System.out.println(b); System.out.println(Config.SERVER.commandPermissionLevelAll.get()); return b;})
+                                                .requires(src -> { boolean b = src.hasPermission(Config.SERVER.commandPermissionLevelAll.get()); return b;})
                                                 .executes((cmd) -> {
                                                     return handleClear(cmd.getSource(), EntityArgument.getPlayers(cmd, "target"));
                                                 })
@@ -66,6 +67,12 @@ public class CommandFakeName {
                 .then(
                         literal("set")
                         .then(
+                                Commands.argument("fakename", StringArgumentType.string())
+                                        .executes((cmd) -> {
+                                            return handleSetname(cmd.getSource(), Collections.singleton(cmd.getSource().getPlayerOrException()), StringArgumentType.getString(cmd, "fakename"));
+                                        })
+                        )
+                        .then(
                                 Commands.argument("target", EntityArgument.players())
                                 .requires(src -> src.hasPermission(Config.SERVER.commandPermissionLevelAll.get()))
                                 .then(
@@ -75,16 +82,10 @@ public class CommandFakeName {
                                                 })
                                 )
                         )
-                        .then(
-                                Commands.argument("fakename", StringArgumentType.string())
-                                        .executes((cmd) -> {
-                                            return handleSetname(cmd.getSource(), Collections.singleton(cmd.getSource().getPlayerOrException()), StringArgumentType.getString(cmd, "fakename"));
-                                        })
-                        )
+                        
                 );
 
         dispatcher.register(builder);
-
     }
 
     private static int handleSetname(CommandSourceStack source, Collection<ServerPlayer> players, String string) {
@@ -94,7 +95,7 @@ public class CommandFakeName {
         {
             CompoundTag tag = player.getPersistentData();
             tag.putString("fakename", string);
-            source.sendSuccess(new TextComponent(player.getName() + "'s name is now " + string), false);
+            source.sendSuccess(new TextComponent(player.getName().getContents() + "'s name is now " + string), false);
             FakeName.sendPacket(player, string, 0);
         }
 
@@ -107,7 +108,7 @@ public class CommandFakeName {
         {
             CompoundTag tag = player.getPersistentData();
             tag.remove("fakename");
-            source.sendSuccess(new TextComponent(player.getName() + "'s fake name was cleared!"), false);
+            source.sendSuccess(new TextComponent(player.getName().getContents() + "'s fake name was cleared!"), false);
             FakeName.sendPacket(player, "", 1);
         }
 
@@ -116,19 +117,27 @@ public class CommandFakeName {
 
     private static int handleRealname(CommandSourceStack source, String string)
     {
+    	String copy = string;
+        string = string.replace("&", "\u00a7") + "\u00a7r";
+    	string = ChatFormatting.stripFormatting(string);
         PlayerList players = source.getServer().getPlayerList();
+        boolean succ = false;
         for (Player player : players.getPlayers())
         {
             if (player.getPersistentData() != null && player.getPersistentData().contains("fakename"))
             {
-                if (player.getPersistentData().getString("fakename").equalsIgnoreCase(string))
+            	String fn = ChatFormatting.stripFormatting(player.getPersistentData().getString("fakename"));
+                if (fn.equalsIgnoreCase(string))
                 {
-                    source.sendSuccess(new TextComponent(string + "'s real name is " + player.getGameProfile().getName()), false);
-                    return 1;
+                    source.sendSuccess(new TextComponent(copy + "'s real name is " + player.getGameProfile().getName()), false);
+                    succ = true;
                 }
             }
         }
 
+        if(succ)
+        	return 1;
+        
         source.sendFailure(new TextComponent("No player with that name was found!"));
         return 0;
     }
@@ -145,34 +154,37 @@ public class CommandFakeName {
         @Override
         public <S> CompletableFuture<Suggestions> listSuggestions(CommandContext<S> context, SuggestionsBuilder builder)
         {
-            if (!(context.getSource() instanceof SuggestionProvider))
+            
+            if(context.getSource() instanceof CommandSourceStack cs)
             {
-                return Suggestions.empty();
-            } else if (context.getSource() instanceof SharedSuggestionProvider)
-            {
-                return ((SharedSuggestionProvider) context.getSource()).customSuggestion((CommandContext<SharedSuggestionProvider>) context, builder);
-            }
-            else
-            {
-                PlayerList players = ((CommandSourceStack) context.getSource()).getServer().getPlayerList();
+                PlayerList players = cs.getServer().getPlayerList();
                 for (Player player : players.getPlayers())
                 {
                     if (player.getPersistentData() != null && player.getPersistentData().contains("fakename"))
                     {
-                        builder.suggest(player.getPersistentData().getString("fakename"));
+                    	String name = ChatFormatting.stripFormatting(player.getPersistentData().getString("fakename"));
+                    	name = name.contains(" ") ? ('"' + name + '"') : name;
+                    	
+                        builder.suggest(name);
                     }
                 }
 
                 return builder.buildFuture();
             }
+            else if (context.getSource() instanceof SharedSuggestionProvider)
+            {
+                return ((SharedSuggestionProvider) context.getSource()).customSuggestion((CommandContext<SharedSuggestionProvider>) context, builder);
+            }
+            else
+            {
+                return Suggestions.empty();
+            } 
         }
 
         @Override
         public String parse(StringReader reader) throws CommandSyntaxException
         {
-            String rest = reader.getRemaining();
-            reader.setCursor(reader.getTotalLength());
-            return rest;
+        	return reader.readString();
         }
 
         public static class Serializer implements ArgumentSerializer<FakenameArgumentType>

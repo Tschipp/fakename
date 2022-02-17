@@ -1,0 +1,12 @@
+{
+	"required": true,
+	"package": "tschipp.fakename.mixins",
+	"compatibilityLevel": "JAVA_17",
+	"refmap": "fakename.refmap.json",
+	"mixins": [
+	],
+	"client": [
+        "SocialInteractionsPlayerListMixin"
+	],
+	"minVersion": "0.8"
+}

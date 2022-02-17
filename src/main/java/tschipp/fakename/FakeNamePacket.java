@@ -43,8 +43,9 @@ public class FakeNamePacket
     public void handle(Supplier<Context> ctx)
     {
         ctx.get().enqueueWork(() -> {
+        	Minecraft mc = Minecraft.getInstance();
 
-            Player toSync = (Player) FakeName.proxy.getWorld().getEntity(entityId);
+            Player toSync = (Player) mc.level.getEntity(entityId);
 
             if (toSync != null)
             {
@@ -53,9 +54,9 @@ public class FakeNamePacket
                 FakeName.performFakenameOperation(toSync, fakename, deleteFakename);
 
                 if(deleteFakename == 0)
-                    Minecraft.getInstance().player.connection.getPlayerInfo(toSync.getGameProfile().getId()).setTabListDisplayName(new TextComponent(fakename));
+                    mc.player.connection.getPlayerInfo(toSync.getGameProfile().getId()).setTabListDisplayName(new TextComponent(fakename));
                 else
-                    Minecraft.getInstance().player.connection.getPlayerInfo(toSync.getGameProfile().getId()).setTabListDisplayName(new TextComponent(toSync.getGameProfile().getName()));
+                    mc.player.connection.getPlayerInfo(toSync.getGameProfile().getId()).setTabListDisplayName(new TextComponent(toSync.getGameProfile().getName()));
             }
 
         });
