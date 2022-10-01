@@ -2,9 +2,6 @@ package tschipp.fakename;
 
 import static net.minecraft.commands.Commands.literal;
 
-import net.minecraft.commands.Commands;
-import net.minecraft.commands.SharedSuggestionProvider;
-
 import java.util.Collection;
 import java.util.Collections;
 import java.util.concurrent.CompletableFuture;
@@ -17,18 +14,18 @@ import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
-import com.mojang.brigadier.suggestion.SuggestionProvider;
 import com.mojang.brigadier.suggestion.Suggestions;
 import com.mojang.brigadier.suggestion.SuggestionsBuilder;
 
 import net.minecraft.ChatFormatting;
-import net.minecraft.client.multiplayer.ClientSuggestionProvider;
-import net.minecraft.commands.arguments.EntityArgument;
-import net.minecraft.commands.synchronization.ArgumentSerializer;
 import net.minecraft.commands.CommandSourceStack;
+import net.minecraft.commands.Commands;
+import net.minecraft.commands.SharedSuggestionProvider;
+import net.minecraft.commands.arguments.EntityArgument;
+import net.minecraft.commands.synchronization.ArgumentTypeInfo;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.FriendlyByteBuf;
-import net.minecraft.network.chat.TextComponent;
+import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.server.players.PlayerList;
 import net.minecraft.world.entity.player.Player;
@@ -95,7 +92,7 @@ public class CommandFakeName {
         {
             CompoundTag tag = player.getPersistentData();
             tag.putString("fakename", string);
-            source.sendSuccess(new TextComponent(player.getName().getContents() + "'s name is now " + string), false);
+            source.sendSuccess(Component.literal(player.getName().getString() + "'s name is now " + string), false);
             FakeName.sendPacket(player, string, 0);
         }
 
@@ -108,7 +105,7 @@ public class CommandFakeName {
         {
             CompoundTag tag = player.getPersistentData();
             tag.remove("fakename");
-            source.sendSuccess(new TextComponent(player.getName().getContents() + "'s fake name was cleared!"), false);
+            source.sendSuccess(Component.literal(player.getName().getString() + "'s fake name was cleared!"), false);
             FakeName.sendPacket(player, "", 1);
         }
 
@@ -129,7 +126,7 @@ public class CommandFakeName {
             	String fn = ChatFormatting.stripFormatting(player.getPersistentData().getString("fakename"));
                 if (fn.equalsIgnoreCase(string))
                 {
-                    source.sendSuccess(new TextComponent(copy + "'s real name is " + player.getGameProfile().getName()), false);
+                    source.sendSuccess(Component.literal(copy + "'s real name is " + player.getGameProfile().getName()), false);
                     succ = true;
                 }
             }
@@ -138,7 +135,7 @@ public class CommandFakeName {
         if(succ)
         	return 1;
         
-        source.sendFailure(new TextComponent("No player with that name was found!"));
+        source.sendFailure(Component.literal("No player with that name was found!"));
         return 0;
     }
 
@@ -173,7 +170,7 @@ public class CommandFakeName {
             }
             else if (context.getSource() instanceof SharedSuggestionProvider)
             {
-                return ((SharedSuggestionProvider) context.getSource()).customSuggestion((CommandContext<SharedSuggestionProvider>) context, builder);
+                return ((SharedSuggestionProvider) context.getSource()).customSuggestion((CommandContext<SharedSuggestionProvider>) context);
             }
             else
             {
@@ -187,26 +184,26 @@ public class CommandFakeName {
         	return reader.readString();
         }
 
-        public static class Serializer implements ArgumentSerializer<FakenameArgumentType>
-        {
-
-            @Override
-            public void serializeToNetwork(FakenameArgumentType p_121579_, FriendlyByteBuf p_121580_)
-            {
-            }
-
-            @Override
-            public FakenameArgumentType deserializeFromNetwork(FriendlyByteBuf p_121581_)
-            {
-                return fakename();
-            }
-
-            @Override
-            public void serializeToJson(FakenameArgumentType p_121577_, JsonObject p_121578_)
-            {
-            }
-
-        }
+//        public static class Serializer implements ArgumentTypeInfo<FakenameArgumentType>
+//        {
+//
+//            @Override
+//            public void serializeToNetwork(FakenameArgumentType p_121579_, FriendlyByteBuf p_121580_)
+//            {
+//            }
+//
+//            @Override
+//            public FakenameArgumentType deserializeFromNetwork(FriendlyByteBuf p_121581_)
+//            {
+//                return fakename();
+//            }
+//
+//            @Override
+//            public void serializeToJson(FakenameArgumentType p_121577_, JsonObject p_121578_)
+//            {
+//            }
+//
+//        }
 
     }
 }

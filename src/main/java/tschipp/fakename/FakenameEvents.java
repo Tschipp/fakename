@@ -1,7 +1,7 @@
 package tschipp.fakename;
 
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.network.chat.TextComponent;
+import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Player;
 import net.minecraftforge.event.RegisterCommandsEvent;
@@ -24,10 +24,10 @@ public class FakenameEvents
     @SubscribeEvent
     public static void renderName(PlayerEvent.NameFormat event)
     {
-        CompoundTag tag = event.getPlayer().getPersistentData();
+        CompoundTag tag = event.getEntity().getPersistentData();
         if (tag.contains("fakename"))
         {
-            event.setDisplayname(new TextComponent(tag.getString("fakename")));
+            event.setDisplayname(Component.literal(tag.getString("fakename")));
         }
          else
          {
@@ -39,7 +39,7 @@ public class FakenameEvents
     @SubscribeEvent
     public static void onJoinWorld(PlayerEvent.PlayerLoggedInEvent event)
     {
-        Player player = event.getPlayer();
+        Player player = event.getEntity();
         if (!player.level.isClientSide)
         {
             if (player.getPersistentData().contains("fakename"))
@@ -61,7 +61,7 @@ public class FakenameEvents
             Player targetPlayer = (Player) event.getTarget();
             if (targetPlayer.getPersistentData() != null && targetPlayer.getPersistentData().contains("fakename"))
             {
-                ServerPlayer toRecieve = (ServerPlayer) event.getPlayer();
+                ServerPlayer toRecieve = (ServerPlayer) event.getEntity();
                 FakeName.network.send(PacketDistributor.PLAYER.with(() -> toRecieve), new FakeNamePacket(targetPlayer.getPersistentData().getString("fakename"), targetPlayer.getId(), 0));
             }
         }
@@ -72,7 +72,7 @@ public class FakenameEvents
     public static void onClone(PlayerEvent.Clone event)
     {
         Player oldPlayer = event.getOriginal();
-        Player newPlayer = event.getPlayer();
+        Player newPlayer = event.getEntity();
 
         if (oldPlayer.getPersistentData().contains("fakename"))
         {

@@ -4,7 +4,7 @@ import java.util.function.Supplier;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.FriendlyByteBuf;
-import net.minecraft.network.chat.TextComponent;
+import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Player;
 import net.minecraftforge.network.NetworkEvent.Context;
 
@@ -54,9 +54,9 @@ public class FakeNamePacket
                 FakeName.performFakenameOperation(toSync, fakename, deleteFakename);
 
                 if(deleteFakename == 0)
-                    mc.player.connection.getPlayerInfo(toSync.getGameProfile().getId()).setTabListDisplayName(new TextComponent(fakename));
+                    mc.player.connection.getPlayerInfo(toSync.getGameProfile().getId()).setTabListDisplayName(Component.literal(fakename));
                 else
-                    mc.player.connection.getPlayerInfo(toSync.getGameProfile().getId()).setTabListDisplayName(new TextComponent(toSync.getGameProfile().getName()));
+                    mc.player.connection.getPlayerInfo(toSync.getGameProfile().getId()).setTabListDisplayName(Component.literal(toSync.getGameProfile().getName()));
             }
 
         });

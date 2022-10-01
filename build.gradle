@@ -1,18 +1,19 @@
 buildscript {
-    repositories {
-        maven { url = 'https://maven.minecraftforge.net' }
-        maven { url = 'https://repo.spongepowered.org/repository/maven-public/' }
-        mavenCentral()
-    }
     dependencies {
-        classpath group: 'net.minecraftforge.gradle', name: 'ForgeGradle', version: '5.1.+', changing: true
-        classpath group: 'org.spongepowered', name: 'mixingradle', version: '0.7-SNAPSHOT'
+		classpath 'org.parchmentmc:librarian:1.+'
+		classpath 'org.spongepowered:mixingradle:0.7-SNAPSHOT'
     }
 }
-apply plugin: 'net.minecraftforge.gradle'
+
+plugins {
+    id 'eclipse'
+    id 'maven-publish'
+    id 'net.minecraftforge.gradle' version '5.1.+'
+}
+
+apply plugin: 'org.parchmentmc.librarian.forgegradle'
 apply plugin: 'org.spongepowered.mixin'
-apply plugin: 'eclipse'
-apply plugin: 'maven-publish'
+
 
 java.toolchain.languageVersion = JavaLanguageVersion.of(17)
 
@@ -31,7 +32,7 @@ mixin {
 
 
 minecraft {
-    mappings channel: 'official', version: "${mcp_mappings}"
+    mappings channel: 'official', version: "1.19.2"
 
     runs {
         client {

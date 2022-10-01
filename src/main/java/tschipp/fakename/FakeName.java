@@ -1,6 +1,8 @@
 package tschipp.fakename;
 
-import net.minecraft.commands.synchronization.ArgumentTypes;
+import net.minecraft.commands.synchronization.ArgumentTypeInfo;
+import net.minecraft.commands.synchronization.ArgumentTypeInfos;
+import net.minecraft.commands.synchronization.SingletonArgumentInfo;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Player;
@@ -15,6 +17,9 @@ import net.minecraftforge.forgespi.language.IModInfo;
 import net.minecraftforge.network.NetworkRegistry;
 import net.minecraftforge.network.PacketDistributor;
 import net.minecraftforge.network.simple.SimpleChannel;
+import net.minecraftforge.registries.DeferredRegister;
+import net.minecraftforge.registries.ForgeRegistries;
+import net.minecraftforge.registries.RegistryObject;
 import tschipp.fakename.CommandFakeName.FakenameArgumentType;
 
 @EventBusSubscriber(bus = Bus.MOD)
@@ -27,6 +32,13 @@ public class FakeName
 
     public static IModInfo info;
 
+    private static final DeferredRegister<ArgumentTypeInfo<?, ?>> COMMAND_ARGUMENT_TYPES = DeferredRegister.create(ForgeRegistries.COMMAND_ARGUMENT_TYPES, MODID);
+    private static final RegistryObject<SingletonArgumentInfo<FakenameArgumentType>> FAKENAME_ARGUMENT = COMMAND_ARGUMENT_TYPES.register("fakename", () -> {
+    	return ArgumentTypeInfos.registerByClass(FakenameArgumentType.class, SingletonArgumentInfo.contextFree(FakenameArgumentType::fakename));
+    });
+    
+    
+    
     public FakeName()
     {
         FMLJavaModLoadingContext.get().getModEventBus().addListener(this::setup);
@@ -34,15 +46,15 @@ public class FakeName
         ModLoadingContext.get().registerConfig(ModConfig.Type.SERVER, Config.SERVER_SPEC);
 
         info = ModLoadingContext.get().getActiveContainer().getModInfo();
+        
+        COMMAND_ARGUMENT_TYPES.register(FMLJavaModLoadingContext.get().getModEventBus());
     }
 
     private void setup(final FMLCommonSetupEvent event)
     {
         event.enqueueWork(() -> {
         	 FakeName.network = NetworkRegistry.newSimpleChannel(new ResourceLocation(FakeName.MODID, "fakenamechannel"), () -> FakeName.info.getVersion().toString(), s -> true, s -> true);
-             FakeName.network.registerMessage(0, FakeNamePacket.class, FakeNamePacket::toBytes, FakeNamePacket::new, FakeNamePacket::handle);
-        
-             ArgumentTypes.register(MODID + ":" + "fakename", FakenameArgumentType.class, new FakenameArgumentType.Serializer());
+             FakeName.network.registerMessage(0, FakeNamePacket.class, FakeNamePacket::toBytes, FakeNamePacket::new, FakeNamePacket::handle);        
         });
        
     }
