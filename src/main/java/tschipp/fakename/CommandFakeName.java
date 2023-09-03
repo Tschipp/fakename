@@ -92,7 +92,7 @@ public class CommandFakeName {
         {
             CompoundTag tag = player.getPersistentData();
             tag.putString("fakename", string);
-            source.sendSuccess(Component.literal(player.getName().getString() + "'s name is now " + string), false);
+            source.sendSystemMessage(Component.literal(player.getName().getString() + "'s name is now " + string));
             FakeName.sendPacket(player, string, 0);
         }
 
@@ -105,7 +105,7 @@ public class CommandFakeName {
         {
             CompoundTag tag = player.getPersistentData();
             tag.remove("fakename");
-            source.sendSuccess(Component.literal(player.getName().getString() + "'s fake name was cleared!"), false);
+            source.sendSystemMessage(Component.literal(player.getName().getString() + "'s fake name was cleared!"));
             FakeName.sendPacket(player, "", 1);
         }
 
@@ -126,7 +126,7 @@ public class CommandFakeName {
             	String fn = ChatFormatting.stripFormatting(player.getPersistentData().getString("fakename"));
                 if (fn.equalsIgnoreCase(string))
                 {
-                    source.sendSuccess(Component.literal(copy + "'s real name is " + player.getGameProfile().getName()), false);
+                    source.sendSystemMessage(Component.literal(copy + "'s real name is " + player.getGameProfile().getName()));
                     succ = true;
                 }
             }

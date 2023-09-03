@@ -40,7 +40,7 @@ public class FakenameEvents
     public static void onJoinWorld(PlayerEvent.PlayerLoggedInEvent event)
     {
         Player player = event.getEntity();
-        if (!player.level.isClientSide)
+        if (!player.getLevel().isClientSide)
         {
             if (player.getPersistentData().contains("fakename"))
                 FakeName.sendPacket(player, player.getPersistentData().getString("fakename"), 0);
