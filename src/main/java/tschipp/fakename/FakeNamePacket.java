@@ -4,62 +4,38 @@ import java.util.function.Supplier;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.codec.ByteBufCodecs;
+import net.minecraft.network.codec.StreamCodec;
+import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Player;
-import net.minecraftforge.network.NetworkEvent.Context;
+import net.neoforged.neoforge.network.handling.IPayloadContext;
 
-public class FakeNamePacket
-{
-    public String fakename;
-    public int entityId;
-    public int deleteFakename;
+public record FakeNamePacket(String fakename, int entityId, int deleteFakename) implements CustomPacketPayload {
 
-    public FakeNamePacket(FriendlyByteBuf buf)
+
+    public void handle(IPayloadContext ctx)
     {
-        this.fakename = buf.readUtf();
-        this.entityId = buf.readInt();
-        this.deleteFakename = buf.readInt();
-    }
-
-    public FakeNamePacket()
-    {
-
-    }
-
-    public FakeNamePacket(String fakename, int entityID, int delete)
-    {
-        this.fakename = fakename;
-        this.entityId = entityID;
-        this.deleteFakename = delete;
-    }
-
-    public void toBytes(FriendlyByteBuf buf)
-    {
-        buf.writeUtf(fakename);
-        buf.writeInt(entityId);
-        buf.writeInt(deleteFakename);
-    }
-
-    public void handle(Supplier<Context> ctx)
-    {
-        ctx.get().enqueueWork(() -> {
-        	Minecraft mc = Minecraft.getInstance();
+        ctx.enqueueWork(() -> {
+            Minecraft mc = Minecraft.getInstance();
 
             Player toSync = (Player) mc.level.getEntity(entityId);
 
-            if (toSync != null)
-            {
-                ctx.get().setPacketHandled(true);
-
+            if (toSync != null) {
                 FakeName.performFakenameOperation(toSync, fakename, deleteFakename);
 
-                if(deleteFakename == 0)
+                if (deleteFakename == 0)
                     mc.player.connection.getPlayerInfo(toSync.getGameProfile().getId()).setTabListDisplayName(Component.literal(fakename));
                 else
                     mc.player.connection.getPlayerInfo(toSync.getGameProfile().getId()).setTabListDisplayName(Component.literal(toSync.getGameProfile().getName()));
             }
-
         });
     }
 
+    @Override
+    public Type<? extends CustomPacketPayload> type() {
+        return FakeName.TYPE;
+    }
 }

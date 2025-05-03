@@ -40,7 +40,7 @@ public class SocialInteractionsPlayerListMixin {
 				Component dispName = playerinfo.getTabListDisplayName();
 				if(dispName != null && !en.getPlayerName().equals(dispName.getString()))
 				{
-					players.set(i, new PlayerEntry(Minecraft.getInstance(), this.socialInteractionsScreen, playerinfo.getProfile().getId(), dispName.getString(), playerinfo::getSkinLocation, true));
+					players.set(i, new PlayerEntry(Minecraft.getInstance(), this.socialInteractionsScreen, playerinfo.getProfile().getId(), dispName.getString(), playerinfo::getSkin, true));
 				}
 			}
 		}

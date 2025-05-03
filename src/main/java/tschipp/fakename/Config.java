@@ -1,30 +1,29 @@
 package tschipp.fakename;
 
 
+import net.neoforged.neoforge.common.ModConfigSpec;
 import org.apache.commons.lang3.tuple.Pair;
 
-import net.minecraftforge.common.ForgeConfigSpec;
-import net.minecraftforge.common.ForgeConfigSpec.IntValue;
 
 public class Config
 {
 	public static final ServerConfig SERVER;
-	public static final ForgeConfigSpec SERVER_SPEC;
+	public static final ModConfigSpec SERVER_SPEC;
 
 	static
 	{
-		final Pair<ServerConfig, ForgeConfigSpec> specPair = new ForgeConfigSpec.Builder().configure(ServerConfig::new);
+		final Pair<ServerConfig, ModConfigSpec> specPair = new ModConfigSpec.Builder().configure(ServerConfig::new);
 		SERVER_SPEC = specPair.getRight();
 		SERVER = specPair.getLeft();
 	}
 
 	public static class ServerConfig
 	{	
-		public final IntValue commandPermissionLevelSelf;
+		public final ModConfigSpec.IntValue commandPermissionLevelSelf;
 		
-		public final IntValue commandPermissionLevelAll;
+		public final ModConfigSpec.IntValue commandPermissionLevelAll;
 		
-		public ServerConfig(ForgeConfigSpec.Builder builder)
+		public ServerConfig(ModConfigSpec.Builder builder)
 		{
 			builder.push("settings");
 			commandPermissionLevelAll = builder

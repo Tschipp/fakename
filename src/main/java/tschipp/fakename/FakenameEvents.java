@@ -4,14 +4,13 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Player;
-import net.minecraftforge.event.RegisterCommandsEvent;
-import net.minecraftforge.event.entity.player.PlayerEvent;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
-import net.minecraftforge.network.PacketDistributor;
+import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.fml.common.EventBusSubscriber;
+import net.neoforged.neoforge.event.RegisterCommandsEvent;
+import net.neoforged.neoforge.event.entity.player.PlayerEvent;
+import net.neoforged.neoforge.network.PacketDistributor;
 
-@EventBusSubscriber(bus = Mod.EventBusSubscriber.Bus.FORGE)
+@EventBusSubscriber(bus = EventBusSubscriber.Bus.GAME)
 public class FakenameEvents
 {
 
@@ -48,7 +47,7 @@ public class FakenameEvents
             for(Player other : player.getServer().getPlayerList().getPlayers())
             {
                 if (other.getPersistentData().contains("fakename"))
-                    FakeName.network.send(PacketDistributor.PLAYER.with(() -> (ServerPlayer) player), new FakeNamePacket(other.getPersistentData().getString("fakename"), other.getId(), 0));
+                    PacketDistributor.sendToPlayer((ServerPlayer) player, new FakeNamePacket(other.getPersistentData().getString("fakename"), other.getId(), 0));
             }
         }
     }
@@ -62,7 +61,7 @@ public class FakenameEvents
             if (targetPlayer.getPersistentData() != null && targetPlayer.getPersistentData().contains("fakename"))
             {
                 ServerPlayer toRecieve = (ServerPlayer) event.getEntity();
-                FakeName.network.send(PacketDistributor.PLAYER.with(() -> toRecieve), new FakeNamePacket(targetPlayer.getPersistentData().getString("fakename"), targetPlayer.getId(), 0));
+                PacketDistributor.sendToPlayer((ServerPlayer) toRecieve, new FakeNamePacket(targetPlayer.getPersistentData().getString("fakename"), targetPlayer.getId(), 0));
             }
         }
     }
